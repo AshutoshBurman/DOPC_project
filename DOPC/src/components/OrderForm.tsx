@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import ValidationSchema from '../validation/FormValidation';
+import ValidationSchema from '../validation/Schema';
 import { useFormik, Form, Formik  } from 'formik';
-import StaticApi from '../api/StaticApi';
-import getDistance from 'geolib/es/getPreciseDistance';
+
 import DynamicApi from '../api/DynamicApi';
-import Inputmask from 'inputmask';
+import useStore from '../store/store';
+import GetLocation from './GetLocation';
+
+
 
 
 interface HandleChangeEvent {
@@ -19,34 +21,32 @@ const onSubmit = (values: { venueSlug: string; cartValue: string; userLatitude: 
 
 
 
+// interface OrderFormProps {
+//     setFormData: (values: { venueSlug: string; cartValue: string; userLatitude: string; userLongitude: string; }) => void;
+// }
+
 const OrderForm = () => {
-
-
-
-    const cartValue = useRef <string | null>(null);
+    
     const surCharge = useRef <number | null> (null);
-    const totalDistanceInMeters = useRef <number | null> (null);
     const deliveryFee = useRef <number | null>(null);
     const venueSlug = useRef <string | null>(null);
-
-
-
+    const cartValue = useRef <number | null>(null);
+    
+    
+    
     const [showCartValue, setShowCartValue] = useState <number | null>(0);
     const [showDeliveryFee, setShowDeliveryFee] = useState  <number | null>(0);
     const [showDeliveryDistance, setShowDeliveryDistance] = useState <number | null>(0);
     const [showSurcharge, setShowSurcharge] = useState <number | null>(0);
     const [totalPrice, setTotalPrice] = useState <number | null>(0);
-    const [errorMessage, setErrorMessage] = useState <string | null >(''); 
-
-
-
+    
+    
     const { data: dynamicData } = DynamicApi();
     const { noSurCharge, basePrice, distanceRange } = dynamicData || {};
-        
-    const { data } = StaticApi();
-    const coordinates = data?.venueCoordinates;
+    
 
-
+    
+    
     const {values, handleBlur, errors, touched, handleChange, resetForm} = useFormik({
         initialValues: {
             venueSlug: '',
@@ -55,42 +55,25 @@ const OrderForm = () => {
             userLongitude: '',
         },
         validationSchema: ValidationSchema,
-        onSubmit
+        onSubmit: (values) => {
+            console.log(values);
+        }
     });
+    
+    
 
+    const { setUserCoordinates, setErrorMessage, setVenueSlug, setTotalDistanceInMeters} = useStore.getState();
 
-    const GetLocation = () => {
-        (() => {
-          if (coordinates) { 
-            try {
-              const venueCoordinate = { latitude: coordinates[1], longitude: coordinates[0] }; 
+    useEffect(() => {
+
+      setUserCoordinates(parseFloat(values.userLatitude), parseFloat(values.userLongitude));
+      setVenueSlug(values.venueSlug)
       
-              if (values.userLatitude && values.userLongitude) {
-                const userCoordinate = { latitude: values.userLatitude, longitude: values.userLongitude };
-                totalDistanceInMeters.current = getDistance(venueCoordinate, userCoordinate);
-                
-                console.log(totalDistanceInMeters.current, 'distance meter');
-                setErrorMessage('')
-                return true;
-                
-              } 
-              else {
-                setErrorMessage('Please enter correct coordinates');
-                return false;
-              }
-            } catch (error) {
-              console.log('Error calculating distance',error);
-              setErrorMessage('Error calculating distance');
-              return false;
-            }
-          } else {
-            console.log('Venue coordinates are not available.');
-            setErrorMessage('Venue coordinates are not available.');
-            return false;
-          }
-        })();        
-      
-      };
+    },[values.userLatitude, values.userLongitude, values.venueSlug]);
+    
+    const totalDistanceInMeters = useStore((state) => state.totalDistanceInMeters);
+    const errorMessage = useStore((state) => state.errorMessage);
+
     
     //   60.2055
     // 24.6559
@@ -99,11 +82,11 @@ const OrderForm = () => {
 
     // 60.18751
     // 24.9354
-
-
-
+    // 60.18770
     
-    const CalculatePrice = async () => {
+     
+    
+    const calculatePrice = async () => {
         interface DistanceRange {
             min: number;
             max: number;
@@ -111,43 +94,32 @@ const OrderForm = () => {
             b: number;
         }
 
-        const range: DistanceRange | undefined = distanceRange.find((range: DistanceRange) => 
-            totalDistanceInMeters.current !== null && totalDistanceInMeters.current >= range.min && (range.max === 0 || totalDistanceInMeters.current < range.max)
+        const range: DistanceRange | undefined = await distanceRange.find((range: DistanceRange) => 
+            totalDistanceInMeters !== null && totalDistanceInMeters >= range.min && (range.max === 0 || totalDistanceInMeters < range.max)
         );
 
 
-        console.log('number');
-        console.log(range);
-
         if (range && range.max !== 0){
-            if (totalDistanceInMeters.current !== null) {
+            if (totalDistanceInMeters !== null) {
                 deliveryFee.current = (
-                    (Math.round(totalDistanceInMeters.current * range.b / 10) + basePrice + range.a) / 100
+                    (Math.round(totalDistanceInMeters * range.b / 10) + basePrice + range.a) / 100
                 );
             }
-            console.log(deliveryFee.current,'fee log in calculation price');
-
             
-            console.log(totalDistanceInMeters.current, 'total distance adlsjfkansdfsdfasd');
             setErrorMessage('')
             return true
         }  
         else {
-            console.log('   is not available');
-            setErrorMessage('Delivery is not available at this location');
+            setErrorMessage('Delivery is not available at this location'); 
             return false;
         }
     };
 
 
-
-
-
-
-
     
     useEffect(() => {
         let surcharge = 0;
+        cartValue.current = parseFloat((values.cartValue))
 
         if (cartValue.current !== null && cartValue.current.toString().includes(",")) {
             // Code to execute if userLatitude contains a comma
@@ -155,8 +127,8 @@ const OrderForm = () => {
             return setErrorMessage("Please use dot; comma is not allowed");
           }
         
-        if (cartValue.current !== null && parseFloat(cartValue.current) < noSurCharge ) {
-            const cartValueNumeric = parseFloat(cartValue.current);
+        if (cartValue.current !== null && cartValue.current < noSurCharge ) {
+            const cartValueNumeric = cartValue.current;
             
             surcharge = (noSurCharge - (cartValueNumeric * 100));            
             surcharge = surcharge < 0 ? 0 : surcharge;            
@@ -164,97 +136,113 @@ const OrderForm = () => {
         }
         else {
             surcharge = 0;
-        }
-    
-        
+        }   
+        console.log(cartValue.current, 'useEffect');
+             
         surCharge.current=surcharge;
-    }, [cartValue.current]);
+    }, [values.cartValue, noSurCharge, setErrorMessage]);
 
 
+    const handleFormSubmit = async () => {
 
+        
+        const priceCalculationResult = await calculatePrice();
+        if (!priceCalculationResult) {
+            return setErrorMessage;
+        }
+        
 
-    const handleFormSubmit = async () => { 
-        await CalculatePrice();
+        
+        
+        if (cartValue.current !== null && !isNaN(cartValue.current) && surCharge.current !== null && totalDistanceInMeters !== null && venueSlug.current !== null) {
 
-        if (cartValue.current !== null && surCharge.current !== null && totalDistanceInMeters.current !== null && deliveryFee.current !== null && venueSlug.current !== null) {
-
-            if (deliveryFee.current !== null) {
+                console.log(cartValue, 'cart value handleFormSubmit');
+                console.log(surCharge.current, 'handleFormSubmit');
+                console.log(totalDistanceInMeters, 'handleFormSubmit');
+                console.log(deliveryFee.current, 'handleFormSubmit');
+                console.log(venueSlug.current, 'handleFormSubmit');
+                
+                
+    
                 setShowDeliveryFee(deliveryFee.current);
-                console.log(deliveryFee.current, 'check del fee');
+                setShowCartValue(cartValue.current)
+                setShowDeliveryDistance(totalDistanceInMeters ?? 0);
+                setShowSurcharge(surCharge.current);
+                setTotalPrice(parseFloat(((cartValue.current ?? 0) + (deliveryFee.current ?? 0) + (surCharge.current ?? 0)).toFixed(2)));
+    
+                setErrorMessage('');
+                setVenueSlug('');
+                setVenueSlug('');
+                surCharge.current = null;
+                deliveryFee.current = null;
+                venueSlug.current = null;
+                cartValue.current = null;
+
+
+                setTotalDistanceInMeters(0);
+                resetForm();
+    
+            }
+            else if (cartValue.current === null || venueSlug.current === null){
+                setErrorMessage('Please fill in all required fields');   
+                console.log('Form not valid');
+                setShowCartValue(0);
+                setShowDeliveryFee(0);
+                setShowDeliveryDistance(0);
+                setShowSurcharge(0);
+                setTotalPrice(0);
+                setShowDeliveryFee(0)
+                deliveryFee.current = null;
+                venueSlug.current = null;
+                cartValue.current = null;
+
+
+            }
+            else if (totalDistanceInMeters === null){
+                setErrorMessage('Please Press the "Get location" button first');
+                return errorMessage;
+            }
+    
+            else {
+                // setErrorMessage('Cart value is not valid');
+                setShowCartValue(0);
+                setShowDeliveryFee(0);
+                setShowDeliveryDistance(0);
+                setShowSurcharge(0);
+                setTotalPrice(0);
+                setVenueSlug('');
+                deliveryFee.current = null;
+                venueSlug.current = null;
+                cartValue.current = null;
+
+
+                surCharge.current = null;
+
+                return errorMessage;
             }
 
-            setShowDeliveryDistance(totalDistanceInMeters.current ?? 0);
-            setShowSurcharge(surCharge.current ?? 0);
-            console.log(deliveryFee.current, 'surcharge');
-
-            setShowCartValue(parseFloat(cartValue.current));
-            setTotalPrice(parseFloat((parseFloat(cartValue.current) + (deliveryFee.current ?? 0) + (surCharge.current ?? 0)).toFixed(2)));        
-
-            setErrorMessage('');
-            cartValue.current = null;
-            surCharge.current = null;
-            totalDistanceInMeters.current = null;
-            deliveryFee.current = null;
-            venueSlug.current = null;
-            resetForm();
-
-        }
-        // else if (cartValue.current === null){
-        //     setErrorMessage('Please enter a cart value');
-        // }
-        // else if (venueSlug.current === null){
-        //     setErrorMessage('Please enter a venue slug');
-        // }
-        else if (cartValue.current === null || venueSlug.current === null){
-            setErrorMessage('Please fill in all required fields');   
-            console.log('Form not valid');
-            setShowCartValue(0);
-            setShowDeliveryFee(0);
-            setShowDeliveryDistance(0);
-            setShowSurcharge(0);
-            setTotalPrice(0);
-        }
-        else if (totalDistanceInMeters.current === null){
-            setErrorMessage('Please Press the "Get location" button first');
-            return errorMessage;
-        }
-
-        else {
-            setShowCartValue(0);
-            setShowDeliveryFee(0);
-            setShowDeliveryDistance(0);
-            setShowSurcharge(0);
-            setTotalPrice(0);
-            return errorMessage;
-        }
+            return null;
 
     };
 
 
-    const resetAll = () => {
+    const setAll = () => {
         resetForm();
         setShowCartValue(0);
         setShowDeliveryFee(0);
         setShowDeliveryDistance(0);
         setShowSurcharge(0);
+
         setTotalPrice(0);
-        setErrorMessage('');
+        setVenueSlug('');
+        venueSlug.current = null;
+        surCharge.current = null;
+        deliveryFee.current = null;
+        cartValue.current = null;
+        
     }
 
 
-    useEffect(() => {
-        if (cartValue.current) {
-          // Apply Inputmask to the input field
-          Inputmask({
-            alias: 'decimal', // Allows decimal numbers
-            radixPoint: '.',  // Sets the decimal separator to '.'
-            groupSeparator: '', // No grouping separator (no commas)
-            digits: 2, // Number of digits after the decimal point
-            autoGroup: false, // Disables grouping
-            allowMinus: false,
-          }).mask(cartValue.current);
-        }
-      }, []);
 
 
 
@@ -262,10 +250,10 @@ const OrderForm = () => {
         handleChange(e);
         venueSlug.current = (e.target.value);
     };
-    const handleCartValue = (e: HandleChangeEvent) => {
-        handleChange(e);
-        cartValue.current=(e.target.value);
-    };
+    // const handleCartValue = (e: HandleChangeEvent) => {
+    //     handleChange(e);
+    //     setCartValue(e.target.value);
+    // };
     
   return (
     <div className='bg-black max-h-[55rem] max-w-[30rem] h-full w-full flex flex-col rounded-3xl text-white items-center justify-center p-10'>
@@ -311,7 +299,7 @@ const OrderForm = () => {
                                 placeholder='Enter cart value'
                                 data-text-id='cartValue' 
                                 value={values.cartValue}
-                                onChange={handleCartValue} 
+                                onChange={handleChange} 
                                 onBlur={handleBlur} 
                                 required
                                 aria-required='true'
@@ -374,23 +362,20 @@ const OrderForm = () => {
            
             <button
                 type="button"
-                onClick={() => resetAll()}
+                onClick={setAll}
                 className="bg-[hsla(198,100%,44%,0.9)] h-14 text-white max-w-20 w-full font-sans font-medium text-[16px] rounded-lg hover:bg-[hsla(198,100%,44%,1)]"
             >
             Reset
             </button> 
+
+            <GetLocation />
             <button
                 type="button"
-                onClick={GetLocation}
-                className="bg-[hsla(198,100%,44%,0.9)] h-14 text-white max-w-32 w-full font-sans p-2 font-medium text-[16px] rounded-lg hover:bg-[hsla(198,100%,44%,1)]"
+                onClick={handleFormSubmit}
+                className="bg-[hsla(198,100%,44%,0.9)] h-14 text-white w-40 font-sans p-2 font-medium text-[16px] rounded-lg hover:bg-[hsla(198,100%,44%,1)]"
             >
-            Get location
-            </button> 
-
-                <button type='button' 
-                    onClick={handleFormSubmit}
-                    className='bg-[hsla(198,100%,44%,0.9)] h-14 text-white max-w-52 w-full p-2 text-[16px] font-sans font-medium rounded-lg hover:bg-[hsla(198,100%,44%,1)]'>Calculate delivery price</button>
-                
+                Calculate Price
+            </button>
 
             {errorMessage && (<p tabIndex={0} className="text-red-500 text-sm">{errorMessage}</p>)}
         </div>
