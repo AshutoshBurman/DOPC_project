@@ -23,6 +23,9 @@ const GetLocation = () => {
           const distance = getDistance(venueCoordinate, userCoordinate);
           // console.log(distance, 'distance meter');
           setTotalDistanceInMeters(distance);
+
+          console.log(distance, 'distance meter');
+          
           
           setErrorMessage('');
           return true;

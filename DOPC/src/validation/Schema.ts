@@ -1,4 +1,10 @@
 import * as Yup from "yup"
+import useStore from "../store/store";
+import { ErrorMessage } from "formik";
+// import { useEffect } from "react";
+
+const { setErrorMessage } = useStore.getState();
+
 
 const ValidationSchema = Yup.object().shape({
     venueSlug: Yup
@@ -39,13 +45,31 @@ const ValidationSchema = Yup.object().shape({
     //     }
     // ),
 
-    cartValue: Yup.number()
-    .transform((value) => {
-        if (typeof value === 'string' && value.includes(',')) {
-        return null;
+    cartValue: Yup.string()
+    // .transform((value) => {
+    //     if (typeof value === 'string' && value.includes(',')) {
+    //     return null;
+    //     }
+    //     return value;
+    // })
+    .test('no-comma', 'Comma (,) is not allowed, use dot (.)', function (value) {
+        if (value && value.includes(',')) {
+          // If there's a comma, set the error message and fail validation
+          setErrorMessage('Comma (,) is not allowed, use dot (.)');
+          console.log(setErrorMessage);
+          
+          return this.createError({
+            path: this.path,
+            message: 'Comma (,) is not allowed, use dot (.)',
+          });
+        } else {
+          // If no comma, clear the error message
+          setErrorMessage('');
+          console.log(setErrorMessage);
+          return true;
         }
-        return value;
-    })
+      })
+  
     .test(
         'is-decimal',
         'Cart value must be a valid number with up to two decimal places, Ex: 10.12',
@@ -55,16 +79,33 @@ const ValidationSchema = Yup.object().shape({
         return /^\d+(\.\d{1,2})?$/.test(value.toString());
         }
     )
-    .test(
-        'no-comma',
-        'Comma(,) is not allowed, use dot(.)',
-        (value) => {
-        return value !== undefined && !value.toString().includes(',');
-        }
-    )
+    // .test(
+    //     'no-comma',
+    //     'Comma(,) is not allowed, use dot(.)',
+    //     (value) => {
+    //     return value !== undefined && !value.toString().includes('.');
+    //     }
+    // )
+    // .test(
+    //     'no-comma',
+    //     'Comma (,) is not allowed, use dot (.)',
+    //     (value) => {
+    //       if (value === undefined) {
+    //         // Leave it as valid if the value is undefined
+    //         return true;
+    //       } else if (value.toString().includes(',')) {
+    //         // Throw an error if a comma is present
+    //         throw new Error('Comma (,) is not allowed, use dot (.)');
+    //       } else {
+    //         // Leave it as valid if no comma is present
+    //         return true;
+    //       }
+    //     }
+    //   )
+    
     // .transform((value) => (value ? parseFloat(value) : null)) // Convert to number after validation
-    .typeError('Cart value must be a valid number') // General error for invalid input
-    .positive('Cart value must be a positive number')
+    // .typeError('Cart value must be a valid number with dot(.) separator') // General error for invalid input
+    // .positive('Cart value must be a positive number')
     .required('Cart value is required'),
     
 

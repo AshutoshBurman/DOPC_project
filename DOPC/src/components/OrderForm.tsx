@@ -5,6 +5,7 @@ import { useFormik, Form, Formik  } from 'formik';
 import DynamicApi from '../api/DynamicApi';
 import useStore from '../store/store';
 import GetLocation from './GetLocation';
+// import calculatePrice from '../utils/CalculatePrice';
 
 
 
@@ -31,6 +32,8 @@ const OrderForm = () => {
     const deliveryFee = useRef <number | null>(null);
     const venueSlug = useRef <string | null>(null);
     const cartValue = useRef <number | null>(null);
+    console.log(cartValue.current, 'cartValue.current');
+    
     
     
     
@@ -85,33 +88,62 @@ const OrderForm = () => {
     
      
     
-    const calculatePrice = async () => {
-        interface DistanceRange {
-            min: number;
-            max: number;
-            a: number;
-            b: number;
-        }
+    interface DistanceRange {
+        min: number;
+        max: number;
+        a: number;
+        b: number;
+    }
 
-        const range: DistanceRange | undefined = await distanceRange.find((range: DistanceRange) => 
-            totalDistanceInMeters !== null && totalDistanceInMeters >= range.min && (range.max === 0 || totalDistanceInMeters < range.max)
-        );
+    // interface CalculatePriceResult {
+    //     success: boolean;
+    //     errorMessage?: string;
+    // }
+
+    const calculatePrice =  () => {
+
+        // if (errorMessage !== "") {
+        //     console.log(errorMessage, 'errorMessage in the calculatePrice');
+        //     return  errorMessage
+        // }
+
+        // console.log(errorMessage, 'errorMessage in the calculatePrice');
+        // console.log(errorMessage, 'errorMessage in the calculatePrice');
+
+       try {
+            const validationResult  = ValidationSchema.validate(values, { abortEarly: false });
+            console.log('Validation passed:', validationResult);
 
 
-        if (range && range.max !== 0){
-            if (totalDistanceInMeters !== null) {
-                deliveryFee.current = (
-                    (Math.round(totalDistanceInMeters * range.b / 10) + basePrice + range.a) / 100
-                );
-            }
-            
-            setErrorMessage('')
-            return true
-        }  
-        else {
-            setErrorMessage('Delivery is not available at this location'); 
-            return false;
-        }
+        } catch (error) {
+           if (cartValue.current !== null && cartValue.current.toString().includes(",")) {
+               console.log('has error in the code adjnsfkasd');
+               return false;
+           }
+   
+           const range: DistanceRange | undefined =  distanceRange.find((range: DistanceRange) => 
+               totalDistanceInMeters !== null && totalDistanceInMeters >= range.min && (range.max === 0 || totalDistanceInMeters < range.max)
+           );
+   
+               if (range && range.max !== 0) {
+                   if (totalDistanceInMeters !== null) {
+                       deliveryFee.current = (
+                           (Math.round(totalDistanceInMeters * range.b / 10) + basePrice + range.a) / 100
+                       );
+                   }
+                   
+                   setErrorMessage('');
+                   return true ;
+               } else {
+                   setErrorMessage('Delivery is not available at this location'); 
+                   return false
+               }
+        
+       }
+
+            // console.log(errorMessage, 'errorMessage in the calculatePrice');
+            // return false
+
     };
 
 
@@ -125,13 +157,16 @@ const OrderForm = () => {
         //     console.log("Contain comma not allowed");
         //     return setErrorMessage("Please use dot; comma is not allowed");
         //   }
+
+
         
-        if (cartValue.current !== null && cartValue.current < noSurCharge ) {
+        if (errorMessage !== null && cartValue.current !== null && cartValue.current < noSurCharge) {
             const cartValueNumeric = cartValue.current;
             
             surcharge = (noSurCharge - (cartValueNumeric * 100));            
             surcharge = surcharge < 0 ? 0 : surcharge;            
-            surcharge = surcharge / 100;            
+            surcharge = surcharge / 100;  
+            setErrorMessage('')          
         }
         else {
             surcharge = 0;
@@ -143,21 +178,30 @@ const OrderForm = () => {
         surCharge.current=surcharge;
     }, [cartValue.current, noSurCharge, setErrorMessage]);
 
+    // console.log(errorMessage, 'errorMessage');
+    
 
-    const handleFormSubmit = async () => {
+    const handleFormSubmit = () => {
 
         
-        const priceCalculationResult = await calculatePrice();
-        if (!priceCalculationResult) {
-            return setErrorMessage;
+        
+        if (totalDistanceInMeters !== null) {
+            calculatePrice();
         }
         
+        // console.log(totalDistanceInMeters, 'totalDistanceInMeters in the form submit');
+        
+        // console.log(errorMessage, 'errorMessage in the form submit');
+        // console.log(deliveryFee.current, ' deliveryFee errorMessage in the form submit');
+        // console.log(surCharge.current, ' surCharge errorMessage in the form submit');
+        // console.log(venueSlug.current, 'venueSlug errorMessage in the form submit');
+        // console.log(cartValue.current, ' cartValue errorMessage in the form submit');
+        // console.log(errorMessage?.trim(), ' errormessage errorMessage in the form submit');
+        
 
         
         
-        if (cartValue.current !== null && !isNaN(cartValue.current) && surCharge.current !== null && totalDistanceInMeters !== null && venueSlug.current !== null) {
-
-                
+        if (deliveryFee.current !==null && cartValue.current !== null && !isNaN(cartValue.current) && surCharge.current !== null && totalDistanceInMeters !== null && venueSlug.current !== null) {
                 
     
                 setShowDeliveryFee(deliveryFee.current);
@@ -186,30 +230,40 @@ const OrderForm = () => {
                 setShowSurcharge(0);
                 setTotalPrice(0);
 
-                venueSlug.current = null;
-                surCharge.current = null;
-                deliveryFee.current = null;
-                cartValue.current = null;
-
-
             }
+            // else if (typeof cartValue.current === 'string'){
+            //     setErrorMessage('Please enter a valid number');   
+            //     console.log('number not valid');
+            //     setShowCartValue(0);
+            //     setShowDeliveryFee(0);
+            //     setShowDeliveryDistance(0);
+            //     setShowSurcharge(0);
+            //     setTotalPrice(0);
+
+            //     // venueSlug.current = null;
+            //     // surCharge.current = null;
+            //     // deliveryFee.current = null;
+            //     // cartValue.current = null;
+
+
+            // }
             else if (totalDistanceInMeters === null){
                 setErrorMessage('Please Press the "Get location" button first');
                 return errorMessage;
             }
     
             else {
-                // setErrorMessage('Cart value is not valid');
+                setErrorMessage('Cart value is not valid');
                 setShowCartValue(0);
                 setShowDeliveryFee(0);
                 setShowDeliveryDistance(0);
                 setShowSurcharge(0);
                 setTotalPrice(0);
 
-                deliveryFee.current = null;
-                venueSlug.current = null;
-                cartValue.current = null;
-                surCharge.current = null;
+                // deliveryFee.current = null;
+                // venueSlug.current = null;
+                // cartValue.current = null;
+                // surCharge.current = null;
 
                 return errorMessage;
             }
@@ -286,7 +340,7 @@ const OrderForm = () => {
                             </label>
                             <input 
                                 id='cartValue'
-                                type='number'
+                                type='string'
                                 // key={errors.cartValue}
                                 step='0.01'
                                 pattern="^\d+(\.\d{2})?$"
@@ -382,7 +436,7 @@ const OrderForm = () => {
                     <div className='w-full'>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Cart value</p>
-                            <span data-raw-value={`${(showCartValue ?? 0) * 100}`}>{`${showCartValue}€${(showCartValue ?? 0) * 100}`}</span>
+                            <span data-raw-value={`${(showCartValue ?? 0) * 100}`}>{`${showCartValue}€`}</span>
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Delivery fee</p>
@@ -390,15 +444,15 @@ const OrderForm = () => {
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Delivery distance</p>
-                            <span data-raw-value={`${showDeliveryDistance}m`}>{`${showDeliveryDistance}m`}</span>
+                            <span data-raw-value={`${showDeliveryDistance}`}>{`${showDeliveryDistance}m`}</span>
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Small order surcharge</p>
-                            <span data-raw-value={`${(showSurcharge ?? 0) * 100}€`}>{`${showSurcharge}€`}={`${Math.round((showSurcharge ?? 0) * 100)}€`}</span>
+                            <span data-raw-value={`${Math.round((showSurcharge ?? 0) * 100)}`}>{`${showSurcharge}€`}</span>
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Total price</p> 
-                            <span data-raw-value= {`${(totalPrice ?? 0)*100}€`}>{`${totalPrice}€`}{`${(totalPrice ?? 0) * 100}€`}</span>
+                            <span data-raw-value= {`${(totalPrice ?? 0) * 100}€`}>{`${totalPrice}€`}</span>
                         </div>
                     </div>
                 </section>

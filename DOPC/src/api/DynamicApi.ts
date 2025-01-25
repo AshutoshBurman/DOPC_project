@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 
 const url = 'https://consumer-api.development.dev.woltapi.com/home-assignment-api/v1/venues/home-assignment-venue-helsinki/dynamic'
 
-const DynamicApi = () => {
+const DynamicApi =  () => {
 
     return useQuery({
         queryKey: ['venueData'],

@@ -8,12 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "react-scripts test",
+    "test-vi": "vitest",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.64.1",
-    "@testing-library/react": "^16.2.0",
     "axios": "^1.7.9",
     "formik": "^2.4.6",
     "geolib": "^3.3.4",
@@ -25,7 +25,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/inputmask": "^5.0.7",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
