@@ -6,33 +6,25 @@ const GetLocation = () => {
   const { data } = StaticApi();
   const coordinates = data?.venueCoordinates;
 
-  // const totalDistanceInMeters = useRef<number | null>(null);
-  // const [errorMessage, setErrorMessage] = useState('');
-
   const { setTotalDistanceInMeters, setErrorMessage,  } = useStore.getState();
 
   const userLocation = useStore((state) => state.userCoordinates);
-    // console.log(userLocation, 'userCoordinate', userLocation?.latitude, userLocation?.longitude);
 
   const CalculateDistance = () => {
-    // console.log("distance calculation");
     
     if (coordinates) {
       try {
         const venueCoordinate = { latitude: coordinates[1], longitude: coordinates[0] };
-
-        // Replace `values` with actual user coordinates
-        // const values = { userLatitude: 60.1699, userLongitude: 24.9384 }; // Example coordinates for Helsinki
+        // console.log("venue",venueCoordinate, venueCoordinate.latitude, 'latitude', venueCoordinate.longitude, 'longitude');
 
         if (userLocation?.latitude && userLocation?.longitude) {
           const userCoordinate = { latitude: userLocation.latitude, longitude: userLocation.longitude };
+          // console.log("latitude", userCoordinate.latitude,'logitude' ,userCoordinate.longitude);
           const distance = getDistance(venueCoordinate, userCoordinate);
+          // console.log(distance, 'distance meter');
           setTotalDistanceInMeters(distance);
-          console.log(distance, 'total distance:');
           
-          // totalDistanceInMeters.current = distance;
           setErrorMessage('');
-          // console.log(totalDistanceInMeters.current, 'distance meter');
           return true;
         } else {
           setErrorMessage('Please enter correct coordinates');
@@ -59,10 +51,6 @@ const GetLocation = () => {
       >
         Get location
       </button>
-      {/* {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-      {totalDistanceInMeters.current !== null && (
-        <p>Total Distance: {totalDistanceInMeters.current} meters</p>
-      )} */}
     </div>
   );
 };

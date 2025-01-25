@@ -62,14 +62,13 @@ const OrderForm = () => {
     
     
 
-    const { setUserCoordinates, setErrorMessage, setVenueSlug, setTotalDistanceInMeters} = useStore.getState();
+    const { setUserCoordinates, setErrorMessage, setTotalDistanceInMeters} = useStore.getState();
 
     useEffect(() => {
 
       setUserCoordinates(parseFloat(values.userLatitude), parseFloat(values.userLongitude));
-      setVenueSlug(values.venueSlug)
       
-    },[values.userLatitude, values.userLongitude, values.venueSlug]);
+    },[values.userLatitude, values.userLongitude]);
     
     const totalDistanceInMeters = useStore((state) => state.totalDistanceInMeters);
     const errorMessage = useStore((state) => state.errorMessage);
@@ -119,13 +118,13 @@ const OrderForm = () => {
     
     useEffect(() => {
         let surcharge = 0;
-        cartValue.current = parseFloat((values.cartValue))
+        // cartValue.current = parseFloat((values.cartValue))
 
-        if (cartValue.current !== null && cartValue.current.toString().includes(",")) {
-            // Code to execute if userLatitude contains a comma
-            console.log("Contain comma not allowed");
-            return setErrorMessage("Please use dot; comma is not allowed");
-          }
+        // if (values.cartValue !== null && values.cartValue.toString().includes(",")) {
+        //     // Code to execute if userLatitude contains a comma
+        //     console.log("Contain comma not allowed");
+        //     return setErrorMessage("Please use dot; comma is not allowed");
+        //   }
         
         if (cartValue.current !== null && cartValue.current < noSurCharge ) {
             const cartValueNumeric = cartValue.current;
@@ -137,10 +136,12 @@ const OrderForm = () => {
         else {
             surcharge = 0;
         }   
-        console.log(cartValue.current, 'useEffect');
+
+        // console.log(cartValue.current,'useEffect');
+        
              
         surCharge.current=surcharge;
-    }, [values.cartValue, noSurCharge, setErrorMessage]);
+    }, [cartValue.current, noSurCharge, setErrorMessage]);
 
 
     const handleFormSubmit = async () => {
@@ -156,11 +157,6 @@ const OrderForm = () => {
         
         if (cartValue.current !== null && !isNaN(cartValue.current) && surCharge.current !== null && totalDistanceInMeters !== null && venueSlug.current !== null) {
 
-                console.log(cartValue, 'cart value handleFormSubmit');
-                console.log(surCharge.current, 'handleFormSubmit');
-                console.log(totalDistanceInMeters, 'handleFormSubmit');
-                console.log(deliveryFee.current, 'handleFormSubmit');
-                console.log(venueSlug.current, 'handleFormSubmit');
                 
                 
     
@@ -171,8 +167,6 @@ const OrderForm = () => {
                 setTotalPrice(parseFloat(((cartValue.current ?? 0) + (deliveryFee.current ?? 0) + (surCharge.current ?? 0)).toFixed(2)));
     
                 setErrorMessage('');
-                setVenueSlug('');
-                setVenueSlug('');
                 surCharge.current = null;
                 deliveryFee.current = null;
                 venueSlug.current = null;
@@ -191,9 +185,10 @@ const OrderForm = () => {
                 setShowDeliveryDistance(0);
                 setShowSurcharge(0);
                 setTotalPrice(0);
-                setShowDeliveryFee(0)
-                deliveryFee.current = null;
+
                 venueSlug.current = null;
+                surCharge.current = null;
+                deliveryFee.current = null;
                 cartValue.current = null;
 
 
@@ -210,12 +205,10 @@ const OrderForm = () => {
                 setShowDeliveryDistance(0);
                 setShowSurcharge(0);
                 setTotalPrice(0);
-                setVenueSlug('');
+
                 deliveryFee.current = null;
                 venueSlug.current = null;
                 cartValue.current = null;
-
-
                 surCharge.current = null;
 
                 return errorMessage;
@@ -228,13 +221,14 @@ const OrderForm = () => {
 
     const setAll = () => {
         resetForm();
+
         setShowCartValue(0);
         setShowDeliveryFee(0);
         setShowDeliveryDistance(0);
         setShowSurcharge(0);
-
         setTotalPrice(0);
-        setVenueSlug('');
+        setErrorMessage('');
+
         venueSlug.current = null;
         surCharge.current = null;
         deliveryFee.current = null;
@@ -250,10 +244,10 @@ const OrderForm = () => {
         handleChange(e);
         venueSlug.current = (e.target.value);
     };
-    // const handleCartValue = (e: HandleChangeEvent) => {
-    //     handleChange(e);
-    //     setCartValue(e.target.value);
-    // };
+    const handleCartValue = (e: HandleChangeEvent) => {
+        handleChange(e);
+        cartValue.current = parseFloat(e.target.value);
+    };
     
   return (
     <div className='bg-black max-h-[55rem] max-w-[30rem] h-full w-full flex flex-col rounded-3xl text-white items-center justify-center p-10'>
@@ -299,7 +293,7 @@ const OrderForm = () => {
                                 placeholder='Enter cart value'
                                 data-text-id='cartValue' 
                                 value={values.cartValue}
-                                onChange={handleChange} 
+                                onChange={handleCartValue} 
                                 onBlur={handleBlur} 
                                 required
                                 aria-required='true'
@@ -388,23 +382,23 @@ const OrderForm = () => {
                     <div className='w-full'>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Cart value</p>
-                            <p>{`${showCartValue}€`}</p>
+                            <span data-raw-value={`${(showCartValue ?? 0) * 100}`}>{`${showCartValue}€${(showCartValue ?? 0) * 100}`}</span>
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Delivery fee</p>
-                            <p>{`${showDeliveryFee}€`}</p>
+                            <span data-raw-value={`${(showDeliveryFee ?? 0) * 100}`}>{`${showDeliveryFee}€`}={`${(showDeliveryFee ?? 0) * 100}€`}</span>
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Delivery distance</p>
-                            <p>{`${showDeliveryDistance}m`}</p>
+                            <span data-raw-value={`${showDeliveryDistance}m`}>{`${showDeliveryDistance}m`}</span>
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Small order surcharge</p>
-                            <p>{`${showSurcharge}€`}</p>
+                            <span data-raw-value={`${(showSurcharge ?? 0) * 100}€`}>{`${showSurcharge}€`}={`${Math.round((showSurcharge ?? 0) * 100)}€`}</span>
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
-                            <p>Total price</p>
-                            <p>{`${totalPrice}€`}</p>
+                            <p>Total price</p> 
+                            <span data-raw-value= {`${(totalPrice ?? 0)*100}€`}>{`${totalPrice}€`}{`${(totalPrice ?? 0) * 100}€`}</span>
                         </div>
                     </div>
                 </section>
