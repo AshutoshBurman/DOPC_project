@@ -1,5 +1,5 @@
 
-import React, {useState } from 'react';
+import React from 'react';
 import useStore from '../store/store';
 import getDistance from 'geolib/es/getPreciseDistance';
 import StaticApi from '../api/StaticApi';
@@ -30,8 +30,14 @@ const UserLocation = () => {
   
   const { setUserLongitude, setUserLatitude,setErrorMessage, setTotalDistanceInMeters} = useStore.getState();
   const { data } = StaticApi();
-  const coordinates = data?.venueCoordinates;
+
+  if (!data) {
+    return null;
+  }
+  const coordinates = data.venueCoordinates;
   const venueCoordinate = { latitude: coordinates[1], longitude: coordinates[0] };
+
+
 
   
   // const [location, setLocation] = useState<Location>({ latitude: 0, longitude: 0 });
@@ -56,6 +62,7 @@ const UserLocation = () => {
 
 
         const distance = getDistance(venueCoordinate, userCoodinate);
+        setTotalDistanceInMeters(distance);
         console.log(distance);
         
 
