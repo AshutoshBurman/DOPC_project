@@ -79,13 +79,21 @@ const OrderForm = () => {
 
     useEffect(() => {
 
-      setUserCoordinates(parseFloat(values.userLatitude), parseFloat(values.userLongitude));
-      setUserLatitude(Latitude);
+    //   setUserCoordinates(parseFloat(values.userLatitude), parseFloat(values.userLongitude));
+    
+    //   setUserLatitude(Latitude);
       
-      setUserLongitude(Longitude);
+    //   setUserLongitude(Longitude);
+    //updaTE formik values when userLatitude and userLongitude changes
+
+   
+    values.userLatitude = Latitude !== null&& Latitude;
+    values.userLongitude = Longitude !== null && Longitude;
+    
+
       
       
-    },[Latitude, Longitude]);
+    },[Latitude, Longitude,values]);
     
     
 
@@ -207,21 +215,26 @@ const OrderForm = () => {
 
     const setAll = () => {
         resetForm();
-
-        setShowCartValue(0);
-        setShowDeliveryFee(0);
-        setShowDeliveryDistance(0);
-        setShowSurcharge(0);
-        setTotalPrice(0);
-        setErrorMessage('');
-
         setUserLatitude(null);
         setUserLongitude(null);
+      
+    
 
-        venueSlug.current = null;
-        surCharge.current = null;
-        deliveryFee.current = null;
-        cartValue.current = null;
+
+        // setShowCartValue(0);
+        // setShowDeliveryFee(0);
+        // setShowDeliveryDistance(0);
+        // setShowSurcharge(0);
+        // setTotalPrice(0);
+        // setErrorMessage('');
+
+        // setUserLatitude(null);
+        // setUserLongitude(null);
+
+        // venueSlug.current = null;
+        // surCharge.current = null;
+        // deliveryFee.current = null;
+        // cartValue.current = null;
         
     }
 
@@ -350,7 +363,10 @@ const OrderForm = () => {
             >
             Reset
             </button> 
-            <UserLocation/>
+            <UserLocation
+            setLatitude={setUserLatitude}
+            setLongitude={setUserLongitude}
+            />
 
             {/* <GetLocation /> */}
             <button

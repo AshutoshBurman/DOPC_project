@@ -26,7 +26,11 @@ interface Location {
 // }
 
 
-const UserLocation = () => {
+const UserLocation = ({
+  setLongitude,
+  setLatitude,
+
+}) => {
   
   const { setUserLongitude, setUserLatitude,setErrorMessage, setTotalDistanceInMeters} = useStore.getState();
   const { data } = StaticApi();
@@ -69,6 +73,8 @@ const UserLocation = () => {
         
         setUserLatitude(position.coords.latitude);
         setUserLongitude(position.coords.longitude);
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
       } catch (error) {
         if (error instanceof GeolocationPositionError) {
           console.error(`Geolocation error: ${error.message}`);
