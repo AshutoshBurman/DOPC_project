@@ -15,18 +15,11 @@ const GetLocation = () => {
     if (coordinates) {
       try {
         const venueCoordinate = { latitude: coordinates[1], longitude: coordinates[0] };
-        // console.log("venue",venueCoordinate, venueCoordinate.latitude, 'latitude', venueCoordinate.longitude, 'longitude');
 
         if (userLocation?.latitude && userLocation?.longitude) {
           const userCoordinate = { latitude: userLocation.latitude, longitude: userLocation.longitude };
-          // console.log("latitude", userCoordinate.latitude,'logitude' ,userCoordinate.longitude);
           const distance = getDistance(venueCoordinate, userCoordinate);
-          // console.log(distance, 'distance meter');
           setTotalDistanceInMeters(distance);
-
-          console.log(distance, 'distance meter');
-          
-          
           setErrorMessage('');
           return true;
         } else {
@@ -39,7 +32,6 @@ const GetLocation = () => {
         return false;
       }
     } else {
-      console.log('Venue coordinates are not available.');
       setErrorMessage('Venue coordinates are not available.');
       return false;
     }

@@ -4,8 +4,8 @@ import { useFormik, Form, Formik  } from 'formik';
 
 import DynamicApi from '../api/DynamicApi';
 import useStore from '../store/store';
-import GetLocation from './GetLocation';
-// import calculatePrice from '../utils/CalculatePrice';
+// import GetLocation from './GetLocation';
+import UserLocation from '../utils/UserLocation';
 
 
 
@@ -16,15 +16,18 @@ interface HandleChangeEvent {
     };
 }
 
+interface DistanceRange {
+    min: number;
+    max: number;
+    a: number;
+    b: number;
+}
+
 const onSubmit = (values: { venueSlug: string; cartValue: string; userLatitude: string; userLongitude: string; }) => {
     console.log (values);
 }
 
 
-
-// interface OrderFormProps {
-//     setFormData: (values: { venueSlug: string; cartValue: string; userLatitude: string; userLongitude: string; }) => void;
-// }
 
 const OrderForm = () => {
     
@@ -32,8 +35,6 @@ const OrderForm = () => {
     const deliveryFee = useRef <number | null>(null);
     const venueSlug = useRef <string | null>(null);
     const cartValue = useRef <number | null>(null);
-    console.log(cartValue.current, 'cartValue.current');
-    
     
     
     
@@ -42,6 +43,9 @@ const OrderForm = () => {
     const [showDeliveryDistance, setShowDeliveryDistance] = useState <number | null>(0);
     const [showSurcharge, setShowSurcharge] = useState <number | null>(0);
     const [totalPrice, setTotalPrice] = useState <number | null>(0);
+    const [userLatitude, setUserLatitude] = useState <number | null>(0);
+    const [userLongitude, setUserLongitude] = useState <number | null>(0);
+
     
     
     const { data: dynamicData } = DynamicApi();
@@ -67,14 +71,24 @@ const OrderForm = () => {
 
     const { setUserCoordinates, setErrorMessage, setTotalDistanceInMeters} = useStore.getState();
 
+    const totalDistanceInMeters = useStore((state) => state.totalDistanceInMeters);
+    const errorMessage = useStore((state) => state.errorMessage);
+    const Latitude = useStore(((state) => state.userLatitude));
+    const Longitude = useStore((state) => state.userLogitude);
+
+
     useEffect(() => {
 
       setUserCoordinates(parseFloat(values.userLatitude), parseFloat(values.userLongitude));
+      setUserLatitude(Latitude);
       
-    },[values.userLatitude, values.userLongitude]);
+      setUserLongitude(Longitude);
+      
+      
+    },[Latitude, Longitude]);
     
-    const totalDistanceInMeters = useStore((state) => state.totalDistanceInMeters);
-    const errorMessage = useStore((state) => state.errorMessage);
+    
+
 
     
     //   60.2055
@@ -85,39 +99,30 @@ const OrderForm = () => {
     // 60.18751
     // 24.9354
     // 60.18770
+
+    useEffect(() => {
+        let surcharge = 0;
+
+        if (errorMessage !== null && cartValue.current !== null && cartValue.current < noSurCharge) {
+            const cartValueNumeric = cartValue.current;
+            
+            surcharge = (noSurCharge - (cartValueNumeric * 100));            
+            surcharge = surcharge < 0 ? 0 : surcharge;            
+            surcharge = surcharge / 100;  
+            setErrorMessage('')          
+        }
+        else {
+            surcharge = 0;
+        }           
+             
+        surCharge.current=surcharge;
+    }, [cartValue.current, noSurCharge]);
     
      
-    
-    interface DistanceRange {
-        min: number;
-        max: number;
-        a: number;
-        b: number;
-    }
 
-    // interface CalculatePriceResult {
-    //     success: boolean;
-    //     errorMessage?: string;
-    // }
 
     const calculatePrice =  () => {
-
-        // if (errorMessage !== "") {
-        //     console.log(errorMessage, 'errorMessage in the calculatePrice');
-        //     return  errorMessage
-        // }
-
-        // console.log(errorMessage, 'errorMessage in the calculatePrice');
-        // console.log(errorMessage, 'errorMessage in the calculatePrice');
-
-       try {
-            const validationResult  = ValidationSchema.validate(values, { abortEarly: false });
-            console.log('Validation passed:', validationResult);
-
-
-        } catch (error) {
            if (cartValue.current !== null && cartValue.current.toString().includes(",")) {
-               console.log('has error in the code adjnsfkasd');
                return false;
            }
    
@@ -138,69 +143,20 @@ const OrderForm = () => {
                    setErrorMessage('Delivery is not available at this location'); 
                    return false
                }
-        
-       }
-
-            // console.log(errorMessage, 'errorMessage in the calculatePrice');
-            // return false
 
     };
 
 
     
-    useEffect(() => {
-        let surcharge = 0;
-        // cartValue.current = parseFloat((values.cartValue))
 
-        // if (values.cartValue !== null && values.cartValue.toString().includes(",")) {
-        //     // Code to execute if userLatitude contains a comma
-        //     console.log("Contain comma not allowed");
-        //     return setErrorMessage("Please use dot; comma is not allowed");
-        //   }
-
-
-        
-        if (errorMessage !== null && cartValue.current !== null && cartValue.current < noSurCharge) {
-            const cartValueNumeric = cartValue.current;
-            
-            surcharge = (noSurCharge - (cartValueNumeric * 100));            
-            surcharge = surcharge < 0 ? 0 : surcharge;            
-            surcharge = surcharge / 100;  
-            setErrorMessage('')          
-        }
-        else {
-            surcharge = 0;
-        }   
-
-        // console.log(cartValue.current,'useEffect');
-        
-             
-        surCharge.current=surcharge;
-    }, [cartValue.current, noSurCharge, setErrorMessage]);
-
-    // console.log(errorMessage, 'errorMessage');
-    
 
     const handleFormSubmit = () => {
 
         
-        
         if (totalDistanceInMeters !== null) {
             calculatePrice();
         }
-        
-        // console.log(totalDistanceInMeters, 'totalDistanceInMeters in the form submit');
-        
-        // console.log(errorMessage, 'errorMessage in the form submit');
-        // console.log(deliveryFee.current, ' deliveryFee errorMessage in the form submit');
-        // console.log(surCharge.current, ' surCharge errorMessage in the form submit');
-        // console.log(venueSlug.current, 'venueSlug errorMessage in the form submit');
-        // console.log(cartValue.current, ' cartValue errorMessage in the form submit');
-        // console.log(errorMessage?.trim(), ' errormessage errorMessage in the form submit');
-        
 
-        
-        
         if (deliveryFee.current !==null && cartValue.current !== null && !isNaN(cartValue.current) && surCharge.current !== null && totalDistanceInMeters !== null && venueSlug.current !== null) {
                 
     
@@ -223,7 +179,6 @@ const OrderForm = () => {
             }
             else if (cartValue.current === null || venueSlug.current === null){
                 setErrorMessage('Please fill in all required fields');   
-                console.log('Form not valid');
                 setShowCartValue(0);
                 setShowDeliveryFee(0);
                 setShowDeliveryDistance(0);
@@ -231,22 +186,6 @@ const OrderForm = () => {
                 setTotalPrice(0);
 
             }
-            // else if (typeof cartValue.current === 'string'){
-            //     setErrorMessage('Please enter a valid number');   
-            //     console.log('number not valid');
-            //     setShowCartValue(0);
-            //     setShowDeliveryFee(0);
-            //     setShowDeliveryDistance(0);
-            //     setShowSurcharge(0);
-            //     setTotalPrice(0);
-
-            //     // venueSlug.current = null;
-            //     // surCharge.current = null;
-            //     // deliveryFee.current = null;
-            //     // cartValue.current = null;
-
-
-            // }
             else if (totalDistanceInMeters === null){
                 setErrorMessage('Please Press the "Get location" button first');
                 return errorMessage;
@@ -260,15 +199,8 @@ const OrderForm = () => {
                 setShowSurcharge(0);
                 setTotalPrice(0);
 
-                // deliveryFee.current = null;
-                // venueSlug.current = null;
-                // cartValue.current = null;
-                // surCharge.current = null;
-
                 return errorMessage;
             }
-
-            return null;
 
     };
 
@@ -368,7 +300,7 @@ const OrderForm = () => {
                                 type='number'
                                 step='any'
                                 placeholder='Enter latitude' 
-                                value={values.userLatitude}
+                                value={userLatitude ?? ''}
                                 onChange={handleChange} 
                                 onBlur={handleBlur}   
                                 data-text-id='userLatitude'
@@ -390,7 +322,7 @@ const OrderForm = () => {
                                 type='number'
                                 step='any'
                                 placeholder='Enter longitude'
-                                value={values.userLongitude}
+                                value={userLongitude ?? ''}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 data-text-id='userLongitude' 
@@ -415,10 +347,13 @@ const OrderForm = () => {
             >
             Reset
             </button> 
+            <UserLocation/>
 
-            <GetLocation />
+            {/* <GetLocation /> */}
             <button
                 type="button"
+                data-test-id="getLocation"	
+                id='getLocation'
                 onClick={handleFormSubmit}
                 className="bg-[hsla(198,100%,44%,0.9)] h-14 text-white w-40 font-sans p-2 font-medium text-[16px] rounded-lg hover:bg-[hsla(198,100%,44%,1)]"
             >
@@ -440,7 +375,7 @@ const OrderForm = () => {
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Delivery fee</p>
-                            <span data-raw-value={`${(showDeliveryFee ?? 0) * 100}`}>{`${showDeliveryFee}€`}={`${(showDeliveryFee ?? 0) * 100}€`}</span>
+                            <span data-raw-value={`${(showDeliveryFee ?? 0) * 100}`}>{`${showDeliveryFee}€`}</span>
                         </div>
                         <div tabIndex={0} className=' w-full flex flex-row justify-between' >
                             <p>Delivery distance</p>

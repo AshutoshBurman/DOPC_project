@@ -15,7 +15,6 @@ const StaticApi = () => {
             const venueCoordinates = coordinates.venue_raw.location.coordinates;                                    
             return {venueCoordinates};
         },
-        // Optional: you can configure error handling, loading states, etc.
     });
 };
 
