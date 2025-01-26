@@ -44,7 +44,7 @@ const UserLocation = () => {
 
 
   const GetLocation = async () => {
-    if (navigator.geolocation) {
+
       try {
 
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
@@ -76,9 +76,7 @@ const UserLocation = () => {
           console.error("An unexpected error occurred.");
         }
       }
-    } else {
-      console.error("Geolocation is not supported by this browser.");
-    }
+  
   };
 
   return (  
