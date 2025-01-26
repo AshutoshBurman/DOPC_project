@@ -74,20 +74,6 @@ const OrderForm = () => {
     const totalDistanceInMeters = useStore((state) => state.totalDistanceInMeters);
     const errorMessage = useStore((state) => state.errorMessage);
 
-    
-    
-
-
-    
-    //   60.2055
-    // 24.6559
-    // 60.1695
-    // 24.9354
-
-    // 60.18751
-    // 24.9354
-    // 60.18770
-
   
     
      
