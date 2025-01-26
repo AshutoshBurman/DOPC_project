@@ -43,8 +43,8 @@ const OrderForm = () => {
     const [showDeliveryDistance, setShowDeliveryDistance] = useState <number | null>(0);
     const [showSurcharge, setShowSurcharge] = useState <number | null>(0);
     const [totalPrice, setTotalPrice] = useState <number | null>(0);
-    const [userLatitude, setUserLatitude] = useState <number | null>(0);
-    const [userLongitude, setUserLongitude] = useState <number | null>(0);
+    const [userLatitude, setUserLatitude] = useState <number | null>(null);
+    const [userLongitude, setUserLongitude] = useState <number | null>(null);
 
     
     
@@ -69,31 +69,11 @@ const OrderForm = () => {
     
     
 
-    const { setUserCoordinates, setErrorMessage, setTotalDistanceInMeters} = useStore.getState();
+    const { setErrorMessage, setTotalDistanceInMeters} = useStore.getState();
 
     const totalDistanceInMeters = useStore((state) => state.totalDistanceInMeters);
     const errorMessage = useStore((state) => state.errorMessage);
-    const Latitude = useStore(((state) => state.userLatitude));
-    const Longitude = useStore((state) => state.userLogitude);
 
-
-    useEffect(() => {
-
-    //   setUserCoordinates(parseFloat(values.userLatitude), parseFloat(values.userLongitude));
-    
-    //   setUserLatitude(Latitude);
-      
-    //   setUserLongitude(Longitude);
-    //updaTE formik values when userLatitude and userLongitude changes
-
-   
-    values.userLatitude = Latitude !== null&& Latitude;
-    values.userLongitude = Longitude !== null && Longitude;
-    
-
-      
-      
-    },[Latitude, Longitude,values]);
     
     
 
@@ -108,62 +88,71 @@ const OrderForm = () => {
     // 24.9354
     // 60.18770
 
-    useEffect(() => {
-        let surcharge = 0;
-
-        if (errorMessage !== null && cartValue.current !== null && cartValue.current < noSurCharge) {
-            const cartValueNumeric = cartValue.current;
-            
-            surcharge = (noSurCharge - (cartValueNumeric * 100));            
-            surcharge = surcharge < 0 ? 0 : surcharge;            
-            surcharge = surcharge / 100;  
-            setErrorMessage('')          
-        }
-        else {
-            surcharge = 0;
-        }           
-             
-        surCharge.current=surcharge;
-    }, [cartValue.current, noSurCharge]);
+  
     
      
 
-
     const calculatePrice =  () => {
-           if (cartValue.current !== null && cartValue.current.toString().includes(",")) {
-               return false;
-           }
-   
-           const range: DistanceRange | undefined =  distanceRange.find((range: DistanceRange) => 
-               totalDistanceInMeters !== null && totalDistanceInMeters >= range.min && (range.max === 0 || totalDistanceInMeters < range.max)
-           );
-   
-               if (range && range.max !== 0) {
-                   if (totalDistanceInMeters !== null) {
-                       deliveryFee.current = (
-                           (Math.round(totalDistanceInMeters * range.b / 10) + basePrice + range.a) / 100
-                       );
-                   }
-                   
-                   setErrorMessage('');
-                   return true ;
-               } else {
-                   setErrorMessage('Delivery is not available at this location'); 
-                   return false
-               }
 
+        
+
+        const range: DistanceRange | undefined = distanceRange.find((range: DistanceRange) => 
+            totalDistanceInMeters !== null && totalDistanceInMeters >= range.min && (range.max === 0 || totalDistanceInMeters < range.max)
+        );
+        console.log('number');
+        console.log(range);
+        if (range && range.max !== 0){
+            if (totalDistanceInMeters !== null) {
+                deliveryFee.current = (
+                    (Math.round(totalDistanceInMeters * range.b / 10) + basePrice + range.a) / 100
+                );
+            }
+            console.log(deliveryFee.current,'fee log in calculation price');
+            
+            console.log(totalDistanceInMeters, 'total distance adlsjfkansdfsdfasd');
+            setErrorMessage('')
+            return true
+        }  
+        else {
+            console.log('   is not available');
+            setErrorMessage('Delivery is not available at this location');
+            return false;
+        }    
+ 
     };
 
+
+        
+    useEffect(() => {
+        let surcharge = 0;
+        if (cartValue.current !== null && cartValue.current.toString().includes(",")) {
+            // Code to execute if userLatitude contains a comma
+            console.log("Contain comma not allowed");
+            return setErrorMessage("Please use dot; comma is not allowed");
+          }
+        
+        if (cartValue.current !== null && parseFloat(cartValue.current.toString()) < noSurCharge ) {
+            const cartValueNumeric = parseFloat(cartValue.current.toString());
+            
+            surcharge = (noSurCharge - (cartValueNumeric * 100));            
+            surcharge = surcharge < 0 ? 0 : surcharge;            
+            surcharge = surcharge / 100;            
+        }
+        else {
+            surcharge = 0;
+        }
+    
+        
+        surCharge.current=surcharge;
+    }, [cartValue.current]);
 
     
 
 
-    const handleFormSubmit = () => {
+    const handleFormSubmit =  () => {
 
-        
-        if (totalDistanceInMeters !== null) {
-            calculatePrice();
-        }
+        calculatePrice();
+
 
         if (deliveryFee.current !==null && cartValue.current !== null && !isNaN(cartValue.current) && surCharge.current !== null && totalDistanceInMeters !== null && venueSlug.current !== null) {
                 
@@ -176,9 +165,12 @@ const OrderForm = () => {
     
                 setErrorMessage('');
                 surCharge.current = null;
-                deliveryFee.current = null;
+                // setDeliveryFee(null);
                 venueSlug.current = null;
                 cartValue.current = null;
+                setUserLatitude(null);
+                setUserLongitude(null);
+
 
 
                 setTotalDistanceInMeters(0);
@@ -200,7 +192,7 @@ const OrderForm = () => {
             }
     
             else {
-                setErrorMessage('please Check the all the required fields');
+                setErrorMessage('Delivery is not available at this location');
                 setShowCartValue(0);
                 setShowDeliveryFee(0);
                 setShowDeliveryDistance(0);
@@ -221,20 +213,20 @@ const OrderForm = () => {
     
 
 
-        // setShowCartValue(0);
-        // setShowDeliveryFee(0);
-        // setShowDeliveryDistance(0);
-        // setShowSurcharge(0);
-        // setTotalPrice(0);
-        // setErrorMessage('');
+        setShowCartValue(0);
+        setShowDeliveryFee(0);
+        setShowDeliveryDistance(0);
+        setShowSurcharge(0);
+        setTotalPrice(0);
+        setErrorMessage('');
 
         // setUserLatitude(null);
         // setUserLongitude(null);
 
-        // venueSlug.current = null;
-        // surCharge.current = null;
-        // deliveryFee.current = null;
-        // cartValue.current = null;
+        venueSlug.current = null;
+        surCharge.current = null;
+        deliveryFee.current = null;
+        cartValue.current = null;
         
     }
 
@@ -414,6 +406,7 @@ const OrderForm = () => {
         </div>
 
   )
+
 }
 
 export  default OrderForm;

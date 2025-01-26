@@ -6,33 +6,19 @@ import StaticApi from '../api/StaticApi';
 
 
 
-interface Location {
-  latitude: number;
-  longitude: number;
+
+interface UserLocationProps {
+  setLongitude: (longitude: number) => void;
+  setLatitude: (latitude: number) => void;
 }
 
-// interface LocationContextValue {
-//   location: Location;
-//   GetLocation: () => Promise<void>;
-// }
-
-// const LocationContext = createContext<LocationContextValue>({
-//   location: { latitude: 0, longitude: 0 },
-//   GetLocation: async () => {},
-// });
-
-// interface LocationProviderProps {
-//   children: ReactNode;
-// }
-
-
-const UserLocation = ({
+const UserLocation: React.FC<UserLocationProps> = ({
   setLongitude,
   setLatitude,
 
 }) => {
   
-  const { setUserLongitude, setUserLatitude,setErrorMessage, setTotalDistanceInMeters} = useStore.getState();
+  const { setErrorMessage, setTotalDistanceInMeters} = useStore.getState();
   const { data } = StaticApi();
 
   if (!data) {
@@ -40,11 +26,6 @@ const UserLocation = ({
   }
   const coordinates = data.venueCoordinates;
   const venueCoordinate = { latitude: coordinates[1], longitude: coordinates[0] };
-
-
-
-  
-  // const [location, setLocation] = useState<Location>({ latitude: 0, longitude: 0 });
 
 
   const GetLocation = async () => {
@@ -55,34 +36,24 @@ const UserLocation = ({
           navigator.geolocation.getCurrentPosition(resolve, reject);
         });
 
-        const userCoodinate = { latitude: position.coords.latitude, longitude: position.coords.longitude };
-        // setLocation({
-        //   latitude: position.coords.latitude,
-        //   longitude: position.coords.longitude,
-        // });
-        console.log(location);
+        const userCoordinate = { latitude: position.coords.latitude, longitude: position.coords.longitude };
 
-        // const venueCoordinate = { latitude: coordinates[1], longitude: coordinates[0] };
-
-
-        const distance = getDistance(venueCoordinate, userCoodinate);
+        const distance = getDistance(venueCoordinate, userCoordinate);
+        console.log(distance, 'distance meter');
         setTotalDistanceInMeters(distance);
-        console.log(distance);
         
-
+      
         
-        setUserLatitude(position.coords.latitude);
-        setUserLongitude(position.coords.longitude);
         setLatitude(position.coords.latitude);
         setLongitude(position.coords.longitude);
+   
       } catch (error) {
-        if (error instanceof GeolocationPositionError) {
-          console.error(`Geolocation error: ${error.message}`);
+        if (!navigator.geolocation) {
+          setErrorMessage(`please Allow location in your browser`);
         } else {
-          console.error("An unexpected error occurred.");
-        }
+          setErrorMessage(`${error}`);
       }
-  
+    }
   };
 
   return (  

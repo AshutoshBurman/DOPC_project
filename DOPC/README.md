@@ -11,6 +11,9 @@ To run the Project ```npm run start```
 - Eslint
 - Tailwind CSS
 
+---
+
+After pressing the **"Get location"** button it take few second to show data in the input field wait for it I'm sorry lack of time I could implement Loading state on the UI
 
 ```
 This project currently does not include unit tests, component tests, or end-to-end (E2E) tests due to time constraints, which made it challenging to implement comprehensive testing. 

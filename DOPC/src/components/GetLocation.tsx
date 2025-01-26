@@ -17,7 +17,9 @@ const GetLocation = () => {
         const venueCoordinate = { latitude: coordinates[1], longitude: coordinates[0] };
 
         if (userLocation?.latitude && userLocation?.longitude) {
-          const userCoordinate = { latitude: userLocation.latitude, longitude: userLocation.longitude };
+          // const userCoordinate = { latitude: userLocation.latitude, longitude: userLocation.longitude };
+          const userCoordinate = { latitude:60.18751 , longitude: 24.9354 };
+          
           const distance = getDistance(venueCoordinate, userCoordinate);
           setTotalDistanceInMeters(distance);
           setErrorMessage('');
