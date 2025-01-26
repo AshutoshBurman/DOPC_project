@@ -192,7 +192,7 @@ const OrderForm = () => {
             }
     
             else {
-                setErrorMessage('Cart value is not valid');
+                setErrorMessage('please Check the all the required fields');
                 setShowCartValue(0);
                 setShowDeliveryFee(0);
                 setShowDeliveryDistance(0);
@@ -214,6 +214,9 @@ const OrderForm = () => {
         setShowSurcharge(0);
         setTotalPrice(0);
         setErrorMessage('');
+
+        setUserLatitude(null);
+        setUserLongitude(null);
 
         venueSlug.current = null;
         surCharge.current = null;
