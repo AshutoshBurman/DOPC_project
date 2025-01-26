@@ -99,22 +99,18 @@ const OrderForm = () => {
         const range: DistanceRange | undefined = distanceRange.find((range: DistanceRange) => 
             totalDistanceInMeters !== null && totalDistanceInMeters >= range.min && (range.max === 0 || totalDistanceInMeters < range.max)
         );
-        console.log('number');
-        console.log(range);
+
         if (range && range.max !== 0){
             if (totalDistanceInMeters !== null) {
                 deliveryFee.current = (
                     (Math.round(totalDistanceInMeters * range.b / 10) + basePrice + range.a) / 100
                 );
             }
-            console.log(deliveryFee.current,'fee log in calculation price');
-            
-            console.log(totalDistanceInMeters, 'total distance adlsjfkansdfsdfasd');
+
             setErrorMessage('')
             return true
         }  
         else {
-            console.log('   is not available');
             setErrorMessage('Delivery is not available at this location');
             return false;
         }    
@@ -127,7 +123,6 @@ const OrderForm = () => {
         let surcharge = 0;
         if (cartValue.current !== null && cartValue.current.toString().includes(",")) {
             // Code to execute if userLatitude contains a comma
-            console.log("Contain comma not allowed");
             return setErrorMessage("Please use dot; comma is not allowed");
           }
         
